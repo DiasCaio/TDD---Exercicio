@@ -1,6 +1,10 @@
 import os
+import sys
 import keyboard
 import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa2"))
+from snake import Snake
 
 
 class io_handler:
@@ -54,18 +58,26 @@ class io_handler:
             display_content_line(line)
         display_h_line(self)
 
-### exemplo do uso da classe io_handler  
-instance = io_handler((10,15), 0.5)
-instance.matrix[0][0] = 1 #corpo
-instance.matrix[0][1] = 2 #cabeça
-instance.matrix[0][2] = 3 #fruta
+instance = io_handler((20, 10), 0.15)
+snake = Snake((5, 5))
+
+def desenhar():
+    for y in range(len(instance.matrix)):
+        for x in range(len(instance.matrix[0])):
+            instance.matrix[y][x] = 0
+    for i, (x, y) in enumerate(snake.corpo):
+        if 0 <= y < len(instance.matrix) and 0 <= x < len(instance.matrix[0]):
+            instance.matrix[y][x] = 2 if i == 0 else 1
 
 def game_loop():
     instance.record_inputs()
     while True:
+        desenhar()
         instance.display()
         print("mova com WASD, saia com esc. Ultimo botão:", end=' ')
         ###adicione seu código para lidar com o jogo aqui
+        if instance.last_input in ('w', 'a', 's', 'd'):
+            snake.mover(instance.last_input)
 
         print(instance.last_input)
         if(instance.last_input == 'end'):
