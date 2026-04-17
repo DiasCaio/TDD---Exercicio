@@ -39,12 +39,10 @@ class Snake:
 class Jogo:
     def __init__(self, dim, inicio, direcao_inicial='w', spawner=None):
         self.dim = dim
-        self.snake = Snake(inicio)
-        self.direcao = direcao_inicial
+        self.inicio = inicio
+        self.direcao_inicial = direcao_inicial
         self.spawner = spawner
-        self.frutas = []
-        self.vivo = True
-        self._repor_frutas()
+        self.reiniciar()
 
     def _qtd_alvo(self):
         return 1 + self.snake.tamanho // 10
@@ -70,7 +68,11 @@ class Jogo:
         self._repor_frutas()
 
     def reiniciar(self):
-        pass
+        self.snake = Snake(self.inicio)
+        self.direcao = self.direcao_inicial
+        self.frutas = []
+        self.vivo = True
+        self._repor_frutas()
 
     def passo(self, input_jogador):
         if not self.vivo:

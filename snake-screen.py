@@ -4,7 +4,7 @@ import random
 import keyboard
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa5"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa6"))
 from snake import Jogo
 
 
@@ -31,6 +31,7 @@ class io_handler:
         keyboard.add_hotkey('a', lambda: setattr(self, "last_input", 'a'))
         keyboard.add_hotkey('s', lambda: setattr(self, "last_input", 's'))
         keyboard.add_hotkey('d', lambda: setattr(self, "last_input", 'd'))
+        keyboard.add_hotkey('r', lambda: setattr(self, "last_input", 'r'))
         keyboard.add_hotkey('esc', lambda: setattr(self, "last_input", 'end'))
 
     def display(self):
@@ -78,20 +79,42 @@ def desenhar():
         if 0 <= y < len(instance.matrix) and 0 <= x < len(instance.matrix[0]):
             instance.matrix[y][x] = 2 if i == 0 else 1
 
+def desenhar_game_over():
+    for y in range(len(instance.matrix)):
+        for x in range(len(instance.matrix[0])):
+            instance.matrix[y][x] = 1
+
+def tela_jogando():
+    desenhar()
+    instance.display()
+    print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho,
+          " Ultimo botão:", instance.last_input)
+
+def tela_game_over():
+    desenhar_game_over()
+    instance.display()
+    print()
+    print("  ======================================")
+    print("            G A M E   O V E R           ")
+    print(f"            Tamanho final: {jogo.snake.tamanho}")
+    print("         R: reiniciar  |  ESC: sair     ")
+    print("  ======================================")
+
 def game_loop():
     instance.record_inputs()
     while True:
-        desenhar()
-        instance.display()
-        estado = "GAME OVER" if not jogo.vivo else "jogando"
-        print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho, " Estado:", estado, " Ultimo botão:", end=' ')
-        ###adicione seu código para lidar com o jogo aqui
-        entrada = instance.last_input if instance.last_input in ('w', 'a', 's', 'd') else None
-        jogo.passo(entrada)
+        if jogo.vivo:
+            tela_jogando()
+            entrada = instance.last_input if instance.last_input in ('w', 'a', 's', 'd') else None
+            jogo.passo(entrada)
+        else:
+            tela_game_over()
+            if instance.last_input == 'r':
+                jogo.reiniciar()
+                instance.last_input = jogo.direcao
 
-        print(instance.last_input)
-        if(instance.last_input == 'end'):
-            exit()
+        if instance.last_input == 'end':
+            return
         time.sleep(instance.game_speed)
 
 game_loop()
