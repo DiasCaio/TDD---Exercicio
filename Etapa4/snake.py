@@ -5,6 +5,8 @@ DELTAS = {
     'd': (1, 0),
 }
 
+OPOSTOS = {'w': 's', 's': 'w', 'a': 'd', 'd': 'a'}
+
 
 class Snake:
     def __init__(self, inicio):
@@ -51,15 +53,20 @@ class Jogo:
             self.frutas.append(self.spawner(self._ocupadas(), self.dim))
 
     def _atualizar_direcao(self, entrada):
-        if entrada in DELTAS:
+        if entrada in DELTAS and entrada != OPOSTOS[self.direcao]:
             self.direcao = entrada
+
+    def _alvo(self):
+        dx, dy = DELTAS[self.direcao]
+        x, y = self.snake.cabeca
+        return ((x + dx) % self.dim[0], (y + dy) % self.dim[1])
 
     def passo(self, input_jogador):
         self._atualizar_direcao(input_jogador)
-        alvo = self.snake.proxima_cabeca(self.direcao)
+        alvo = self._alvo()
+        self.snake.corpo.insert(0, alvo)
         if alvo in self.frutas:
-            self.snake.crescer(self.direcao)
             self.frutas.remove(alvo)
             self._repor_frutas()
         else:
-            self.snake.mover(self.direcao)
+            self.snake.corpo.pop()

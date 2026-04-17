@@ -4,7 +4,7 @@ import random
 import keyboard
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa3"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa4"))
 from snake import Jogo
 
 
