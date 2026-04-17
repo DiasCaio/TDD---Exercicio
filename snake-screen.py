@@ -1,10 +1,11 @@
 import os
 import sys
+import random
 import keyboard
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa2"))
-from snake import Snake
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa3"))
+from snake import Jogo
 
 
 class io_handler:
@@ -59,13 +60,21 @@ class io_handler:
         display_h_line(self)
 
 instance = io_handler((20, 10), 0.15)
-snake = Snake((5, 5))
+
+def spawner_aleatorio(ocupadas, dim):
+    livres = [(x, y) for y in range(dim[1]) for x in range(dim[0]) if (x, y) not in ocupadas]
+    return random.choice(livres)
+
+jogo = Jogo(dim=(20, 10), inicio=(5, 5), direcao_inicial='d', spawner=spawner_aleatorio)
 
 def desenhar():
     for y in range(len(instance.matrix)):
         for x in range(len(instance.matrix[0])):
             instance.matrix[y][x] = 0
-    for i, (x, y) in enumerate(snake.corpo):
+    for fx, fy in jogo.frutas:
+        if 0 <= fy < len(instance.matrix) and 0 <= fx < len(instance.matrix[0]):
+            instance.matrix[fy][fx] = 3
+    for i, (x, y) in enumerate(jogo.snake.corpo):
         if 0 <= y < len(instance.matrix) and 0 <= x < len(instance.matrix[0]):
             instance.matrix[y][x] = 2 if i == 0 else 1
 
@@ -74,10 +83,10 @@ def game_loop():
     while True:
         desenhar()
         instance.display()
-        print("mova com WASD, saia com esc. Ultimo botão:", end=' ')
+        print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho, " Ultimo botão:", end=' ')
         ###adicione seu código para lidar com o jogo aqui
-        if instance.last_input in ('w', 'a', 's', 'd'):
-            snake.mover(instance.last_input)
+        entrada = instance.last_input if instance.last_input in ('w', 'a', 's', 'd') else None
+        jogo.passo(entrada)
 
         print(instance.last_input)
         if(instance.last_input == 'end'):
