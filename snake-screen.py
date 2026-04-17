@@ -4,7 +4,7 @@ import random
 import keyboard
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa4"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa5"))
 from snake import Jogo
 
 
@@ -83,7 +83,8 @@ def game_loop():
     while True:
         desenhar()
         instance.display()
-        print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho, " Ultimo botão:", end=' ')
+        estado = "GAME OVER" if not jogo.vivo else "jogando"
+        print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho, " Estado:", estado, " Ultimo botão:", end=' ')
         ###adicione seu código para lidar com o jogo aqui
         entrada = instance.last_input if instance.last_input in ('w', 'a', 's', 'd') else None
         jogo.passo(entrada)

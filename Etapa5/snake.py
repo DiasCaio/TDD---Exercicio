@@ -62,11 +62,16 @@ class Jogo:
         return (x % self.dim[0], y % self.dim[1])
 
     def passo(self, input_jogador):
+        if not self.vivo:
+            return
         self._atualizar_direcao(input_jogador)
         alvo = self._com_wrap(self.snake.proxima_cabeca(self.direcao))
         if alvo in self.frutas:
             self.snake.crescer_para(alvo)
             self.frutas.remove(alvo)
             self._repor_frutas()
-        else:
-            self.snake.mover_para(alvo)
+            return
+        if alvo in self.snake.corpo[:-1]:
+            self.vivo = False
+            return
+        self.snake.mover_para(alvo)
