@@ -9,7 +9,7 @@ from snake import Jogo
 
 
 class io_handler:
-    
+
     x_size: int
     y_size: int
     game_speed = float
@@ -19,20 +19,31 @@ class io_handler:
     def __init__(self, dim, speed):
         self.x_size = dim[0]
         self.y_size = dim[1]
-        
+
         self.game_speed = speed
         self.last_input = 'w'
+        self.input_queue = []
 
-        for i in range (self.y_size): 
+        for i in range (self.y_size):
             self.matrix.append([0]*self.x_size)
 
+    def _registrar(self, tecla):
+        if tecla in ('w', 'a', 's', 'd'):
+            self.input_queue.append(tecla)
+        self.last_input = tecla
+
     def record_inputs(self):
-        keyboard.add_hotkey('w', lambda: setattr(self, "last_input", 'w'))
-        keyboard.add_hotkey('a', lambda: setattr(self, "last_input", 'a'))
-        keyboard.add_hotkey('s', lambda: setattr(self, "last_input", 's'))
-        keyboard.add_hotkey('d', lambda: setattr(self, "last_input", 'd'))
-        keyboard.add_hotkey('r', lambda: setattr(self, "last_input", 'r'))
-        keyboard.add_hotkey('esc', lambda: setattr(self, "last_input", 'end'))
+        keyboard.on_press_key('w', lambda e: self._registrar('w'))
+        keyboard.on_press_key('a', lambda e: self._registrar('a'))
+        keyboard.on_press_key('s', lambda e: self._registrar('s'))
+        keyboard.on_press_key('d', lambda e: self._registrar('d'))
+        keyboard.on_press_key('r', lambda e: self._registrar('r'))
+        keyboard.on_press_key('esc', lambda e: self._registrar('end'))
+
+    def proximo_movimento(self):
+        if self.input_queue:
+            return self.input_queue.pop(0)
+        return None
 
     def display(self):
         def display_h_line(self):
@@ -88,7 +99,7 @@ def tela_jogando():
     desenhar()
     instance.display()
     print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho,
-          " Ultimo botão:", instance.last_input)
+          " Direcao:", jogo.direcao)
 
 def tela_game_over():
     desenhar_game_over()
@@ -105,12 +116,12 @@ def game_loop():
     while True:
         if jogo.vivo:
             tela_jogando()
-            entrada = instance.last_input if instance.last_input in ('w', 'a', 's', 'd') else None
-            jogo.passo(entrada)
+            jogo.passo(instance.proximo_movimento())
         else:
             tela_game_over()
             if instance.last_input == 'r':
                 jogo.reiniciar()
+                instance.input_queue.clear()
                 instance.last_input = jogo.direcao
 
         if instance.last_input == 'end':
