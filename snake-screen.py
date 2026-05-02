@@ -1,131 +1,120 @@
 import os
 import sys
 import random
-import keyboard
-import time
+import pygame
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa6"))
 from snake import Jogo
 
+TILE = 40
+GRID = (20, 15)
+LARGURA = TILE * GRID[0]
+ALTURA = TILE * GRID[1]
+COR_FUNDO = (175, 215, 70)
+COR_FUNDO_ESCURA = (167, 209, 61)
+COR_GAME_OVER = (40, 40, 40)
+GAME_SPEED_MS = 150
 
-class io_handler:
+GRAPHICS = os.path.join(os.path.dirname(__file__), "Graphics")
 
-    x_size: int
-    y_size: int
-    game_speed = float
-    last_input: str
-    matrix = []
 
-    def __init__(self, dim, speed):
-        self.x_size = dim[0]
-        self.y_size = dim[1]
+def carregar_sprite(nome):
+    return pygame.image.load(os.path.join(GRAPHICS, nome)).convert_alpha()
 
-        self.game_speed = speed
-        self.last_input = 'w'
-        self.input_queue = []
-
-        for i in range (self.y_size):
-            self.matrix.append([0]*self.x_size)
-
-    def _registrar(self, tecla):
-        if tecla in ('w', 'a', 's', 'd'):
-            self.input_queue.append(tecla)
-        self.last_input = tecla
-
-    def record_inputs(self):
-        keyboard.on_press_key('w', lambda e: self._registrar('w'))
-        keyboard.on_press_key('a', lambda e: self._registrar('a'))
-        keyboard.on_press_key('s', lambda e: self._registrar('s'))
-        keyboard.on_press_key('d', lambda e: self._registrar('d'))
-        keyboard.on_press_key('r', lambda e: self._registrar('r'))
-        keyboard.on_press_key('esc', lambda e: self._registrar('end'))
-
-    def proximo_movimento(self):
-        if self.input_queue:
-            return self.input_queue.pop(0)
-        return None
-
-    def display(self):
-        def display_h_line(self):
-            print ('+', end='')
-            print ('--'* len(self.matrix[0]), end='')
-            print ('+')
-        
-        def display_content_line(line):
-            print ('|', end='')
-            for item in line: 
-                if item == 1:
-                    print ('[]', end='')
-                elif item == 2:
-                    print ('<>', end='')
-                elif item == 3:
-                    print ('()', end='')
-                else:
-                    print ('  ', end='')
-
-            print ('|')
-
-        os.system('cls' if os.name == 'nt' else 'clear')
-        display_h_line(self)
-        for line in self.matrix:
-            display_content_line(line)
-        display_h_line(self)
-
-instance = io_handler((20, 10), 0.15)
 
 def spawner_aleatorio(ocupadas, dim):
     livres = [(x, y) for y in range(dim[1]) for x in range(dim[0]) if (x, y) not in ocupadas]
     return random.choice(livres)
 
-jogo = Jogo(dim=(20, 10), inicio=(5, 5), direcao_inicial='d', spawner=spawner_aleatorio)
 
-def desenhar():
-    for y in range(len(instance.matrix)):
-        for x in range(len(instance.matrix[0])):
-            instance.matrix[y][x] = 0
+def desenhar_fundo(tela):
+    for y in range(GRID[1]):
+        for x in range(GRID[0]):
+            cor = COR_FUNDO if (x + y) % 2 == 0 else COR_FUNDO_ESCURA
+            pygame.draw.rect(tela, cor, (x * TILE, y * TILE, TILE, TILE))
+
+
+def desenhar_jogo(tela, jogo, sprites):
+    desenhar_fundo(tela)
     for fx, fy in jogo.frutas:
-        if 0 <= fy < len(instance.matrix) and 0 <= fx < len(instance.matrix[0]):
-            instance.matrix[fy][fx] = 3
+        tela.blit(sprites['apple'], (fx * TILE, fy * TILE))
     for i, (x, y) in enumerate(jogo.snake.corpo):
-        if 0 <= y < len(instance.matrix) and 0 <= x < len(instance.matrix[0]):
-            instance.matrix[y][x] = 2 if i == 0 else 1
-
-def desenhar_game_over():
-    for y in range(len(instance.matrix)):
-        for x in range(len(instance.matrix[0])):
-            instance.matrix[y][x] = 1
-
-def tela_jogando():
-    desenhar()
-    instance.display()
-    print("mova com WASD, saia com esc. Tamanho:", jogo.snake.tamanho,
-          " Direcao:", jogo.direcao)
-
-def tela_game_over():
-    desenhar_game_over()
-    instance.display()
-    print()
-    print("  ======================================")
-    print("            G A M E   O V E R           ")
-    print(f"            Tamanho final: {jogo.snake.tamanho}")
-    print("         R: reiniciar  |  ESC: sair     ")
-    print("  ======================================")
-
-def game_loop():
-    instance.record_inputs()
-    while True:
-        if jogo.vivo:
-            tela_jogando()
-            jogo.passo(instance.proximo_movimento())
+        if i == 0:
+            sprite = sprites['head_right']
+        elif i == len(jogo.snake.corpo) - 1:
+            sprite = sprites['tail_left']
         else:
-            tela_game_over()
-            if instance.last_input == 'r':
-                jogo.reiniciar()
-                instance.input_queue.clear()
-                instance.last_input = jogo.direcao
+            sprite = sprites['body_horizontal']
+        tela.blit(sprite, (x * TILE, y * TILE))
 
-        if instance.last_input == 'end':
-            return
-        time.sleep(instance.game_speed)
 
-game_loop()
+def desenhar_game_over(tela, jogo, fonte):
+    tela.fill(COR_GAME_OVER)
+    titulo = fonte.render("GAME OVER", True, (240, 240, 240))
+    info = fonte.render(f"Tamanho final: {jogo.snake.tamanho}", True, (200, 200, 200))
+    rodape = fonte.render("R: reiniciar    ESC: sair", True, (200, 200, 200))
+    tela.blit(titulo, titulo.get_rect(center=(LARGURA // 2, ALTURA // 2 - 60)))
+    tela.blit(info, info.get_rect(center=(LARGURA // 2, ALTURA // 2)))
+    tela.blit(rodape, rodape.get_rect(center=(LARGURA // 2, ALTURA // 2 + 60)))
+
+
+TECLAS_DIRECAO = {
+    pygame.K_w: 'w', pygame.K_UP: 'w',
+    pygame.K_s: 's', pygame.K_DOWN: 's',
+    pygame.K_a: 'a', pygame.K_LEFT: 'a',
+    pygame.K_d: 'd', pygame.K_RIGHT: 'd',
+}
+
+
+def main():
+    pygame.init()
+    tela = pygame.display.set_mode((LARGURA, ALTURA))
+    pygame.display.set_caption("Snake")
+    clock = pygame.time.Clock()
+    fonte = pygame.font.SysFont("consolas", 36, bold=True)
+
+    sprites = {
+        'apple': carregar_sprite('apple.png'),
+        'head_right': carregar_sprite('head_right.png'),
+        'tail_left': carregar_sprite('tail_left.png'),
+        'body_horizontal': carregar_sprite('body_horizontal.png'),
+    }
+
+    jogo = Jogo(dim=GRID, inicio=(GRID[0] // 2, GRID[1] // 2),
+                direcao_inicial='d', spawner=spawner_aleatorio)
+
+    fila_inputs = []
+    proximo_tick = pygame.time.get_ticks() + GAME_SPEED_MS
+
+    while True:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return
+                if not jogo.vivo and evento.key == pygame.K_r:
+                    jogo.reiniciar()
+                    fila_inputs.clear()
+                elif jogo.vivo and evento.key in TECLAS_DIRECAO:
+                    fila_inputs.append(TECLAS_DIRECAO[evento.key])
+
+        agora = pygame.time.get_ticks()
+        if agora >= proximo_tick:
+            if jogo.vivo:
+                entrada = fila_inputs.pop(0) if fila_inputs else None
+                jogo.passo(entrada)
+            proximo_tick = agora + GAME_SPEED_MS
+
+        if jogo.vivo:
+            desenhar_jogo(tela, jogo, sprites)
+        else:
+            desenhar_game_over(tela, jogo, fonte)
+        pygame.display.flip()
+        clock.tick(60)
+
+
+if __name__ == "__main__":
+    main()
