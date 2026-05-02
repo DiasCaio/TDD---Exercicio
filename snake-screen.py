@@ -3,7 +3,7 @@ import sys
 import random
 import pygame
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa6"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Etapa7"))
 from snake import Jogo
 
 TILE = 40
@@ -38,14 +38,8 @@ def desenhar_jogo(tela, jogo, sprites):
     desenhar_fundo(tela)
     for fx, fy in jogo.frutas:
         tela.blit(sprites['apple'], (fx * TILE, fy * TILE))
-    for i, (x, y) in enumerate(jogo.snake.corpo):
-        if i == 0:
-            sprite = sprites['head_right']
-        elif i == len(jogo.snake.corpo) - 1:
-            sprite = sprites['tail_left']
-        else:
-            sprite = sprites['body_horizontal']
-        tela.blit(sprite, (x * TILE, y * TILE))
+    for (x, y), nome in jogo.segmentos():
+        tela.blit(sprites[nome], (x * TILE, y * TILE))
 
 
 def desenhar_game_over(tela, jogo, fonte):
@@ -73,12 +67,14 @@ def main():
     clock = pygame.time.Clock()
     fonte = pygame.font.SysFont("consolas", 36, bold=True)
 
-    sprites = {
-        'apple': carregar_sprite('apple.png'),
-        'head_right': carregar_sprite('head_right.png'),
-        'tail_left': carregar_sprite('tail_left.png'),
-        'body_horizontal': carregar_sprite('body_horizontal.png'),
-    }
+    nomes_sprites = [
+        'apple',
+        'head_up', 'head_down', 'head_left', 'head_right',
+        'tail_up', 'tail_down', 'tail_left', 'tail_right',
+        'body_horizontal', 'body_vertical',
+        'body_topleft', 'body_topright', 'body_bottomleft', 'body_bottomright',
+    ]
+    sprites = {nome: carregar_sprite(nome + '.png') for nome in nomes_sprites}
 
     jogo = Jogo(dim=GRID, inicio=(GRID[0] // 2, GRID[1] // 2),
                 direcao_inicial='d', spawner=spawner_aleatorio)
