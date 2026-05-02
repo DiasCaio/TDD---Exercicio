@@ -7,6 +7,8 @@ DELTAS = {
 
 OPOSTOS = {'w': 's', 's': 'w', 'a': 'd', 'd': 'a'}
 
+DIR_PARA_NOME = {'w': 'up', 's': 'down', 'a': 'left', 'd': 'right'}
+
 
 class Snake:
     def __init__(self, inicio):
@@ -52,7 +54,47 @@ class Jogo:
         self._repor_frutas()
 
     def segmentos(self):
-        return []
+        corpo = self.snake.corpo
+        out = []
+        out.append((corpo[0], 'head_' + DIR_PARA_NOME[self.direcao]))
+        for i in range(1, len(corpo) - 1):
+            anterior = corpo[i - 1]
+            seguinte = corpo[i + 1]
+            out.append((corpo[i], self._sprite_meio(corpo[i], anterior, seguinte)))
+        if len(corpo) >= 2:
+            cauda, vizinho = corpo[-1], corpo[-2]
+            out.append((cauda, self._sprite_cauda(cauda, vizinho)))
+        return out
+
+    def _delta(self, origem, destino):
+        dx = destino[0] - origem[0]
+        dy = destino[1] - origem[1]
+        if dx > self.dim[0] / 2: dx -= self.dim[0]
+        elif dx < -self.dim[0] / 2: dx += self.dim[0]
+        if dy > self.dim[1] / 2: dy -= self.dim[1]
+        elif dy < -self.dim[1] / 2: dy += self.dim[1]
+        return (dx, dy)
+
+    def _sprite_cauda(self, cauda, vizinho):
+        dx, dy = self._delta(cauda, vizinho)
+        if dx > 0: return 'tail_left'
+        if dx < 0: return 'tail_right'
+        if dy > 0: return 'tail_up'
+        return 'tail_down'
+
+    def _sprite_meio(self, atual, anterior, seguinte):
+        ax, ay = self._delta(atual, anterior)
+        sx, sy = self._delta(atual, seguinte)
+        if ay == 0 and sy == 0:
+            return 'body_horizontal'
+        if ax == 0 and sx == 0:
+            return 'body_vertical'
+        tem_cima = ay < 0 or sy < 0
+        tem_esquerda = ax < 0 or sx < 0
+        if tem_cima and tem_esquerda: return 'body_topleft'
+        if tem_cima: return 'body_topright'
+        if tem_esquerda: return 'body_bottomleft'
+        return 'body_bottomright'
 
     def passo(self, input_jogador):
         if not self.vivo:
